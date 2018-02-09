@@ -22,14 +22,7 @@ internal class CommonBusDispatcher<T> : OnListen<T>, BusConsumer<T>, Completable
 
     internal constructor(onListen: OnListen<T>) {
         this.latestValue = null
-        this.upstream = listen@ { consumer ->
-            val cancellable = invoke(consumer)
-            val clientCancellable = onListen.invoke(consumer)
-            return@listen {
-                cancellable.cancel()
-                clientCancellable.cancel()
-            }
-        }
+        this.upstream = onListen
     }
 
     fun listen(consumer: BusConsumer<T>): Cancellable {
