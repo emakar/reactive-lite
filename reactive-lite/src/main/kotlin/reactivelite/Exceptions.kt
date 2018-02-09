@@ -59,6 +59,12 @@ class OnErrorNotImplementedException(cause: Throwable?) : RuntimeException(cause
     }
 }
 
+class ErrorNotDeliveredException(cause: Throwable) : RuntimeException(cause) {
+    companion object {
+        private val serialVersionUID = -2951069005839785370L
+    }
+}
+
 class MergedException : RuntimeException {
 
     /**

@@ -108,7 +108,7 @@ open class Task<T> internal constructor(internal val onStart: OnTaskStart<in T>)
 
     fun start(consumer: TaskConsumer<T>): Cancellable {
         return try {
-            onStart.invoke(consumer)
+            onStart.invoke(SafeConsumer(consumer))
         } catch (e: Throwable) {
             throwIfFatal(e)
             consumer.onError(e)
@@ -149,6 +149,30 @@ open class Task<T> internal constructor(internal val onStart: OnTaskStart<in T>)
                             task2: Task<out T2>,
                             zipFunction: Func2<in T1, in T2, out S>): Task<S> {
             return create(ZipOperator(task1, task2, zipFunction))
+        }
+    }
+}
+
+internal class SafeConsumer<T>(consumer: TaskConsumer<T>) : AtomicReference<TaskConsumer<T>>(), TaskConsumer<T> {
+    companion object {
+        private val serialVersionUID = 6601656514043051006L
+    }
+
+    init {
+        set(consumer)
+    }
+
+    override fun onSuccess(event: T) {
+        val consumer = getAndSet(null)
+        consumer?.onSuccess(event)
+    }
+
+    override fun onError(t: Throwable) {
+        val consumer = getAndSet(null)
+        if (consumer != null) {
+            consumer.onError(t)
+        } else {
+            FallbackErrorHandler.handle(ErrorNotDeliveredException(t))
         }
     }
 }

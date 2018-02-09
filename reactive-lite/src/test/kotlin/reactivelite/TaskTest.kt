@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
+
 class TaskTest {
 
     @After
@@ -21,7 +22,6 @@ class TaskTest {
     }
 
     @Test
-    @Ignore
     fun successOnce() {
         val task = Task.create<Int> { consumer ->
             consumer.onSuccess(0)
@@ -30,22 +30,25 @@ class TaskTest {
         }
 
         TestTaskConsumer.test(task)
-                // TODO: some exception
-                .assertError(Exception())
+                .assertSuccess(0)
     }
 
     @Test
-    @Ignore
     fun errorOnce() {
+        val spyErrorHandler = SpyErrorHandler.makeDefault()
+
+        val expected = IllegalArgumentException()
+
         val task = Task.create<Int> { consumer ->
-            consumer.onError(IllegalArgumentException())
+            consumer.onError(expected)
             consumer.onError(IllegalStateException())
             nonCancellable()
         }
 
         TestTaskConsumer.test(task)
-                // TODO: some exception
-                .assertError(Exception())
+                .assertError(expected)
+
+        spyErrorHandler.assertExceptions(ErrorNotDeliveredException::class.java)
     }
 
     @Test
