@@ -111,7 +111,6 @@ class StatefulCancellable : Cancellable {
 
     @Volatile
     var isCancelled: Boolean = false
-        private set
 
     override fun invoke() {
         isCancelled = true
